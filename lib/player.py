@@ -10,7 +10,6 @@ class Player:
 		self.letters = []
 		self.wild_tiles = []
 		self.is_passing = False
-		self.is_saving = False
 		self.word = None
 		self.full_bonus = False
 
@@ -38,13 +37,9 @@ class Player:
 	def get_move(self, bag, board, dic):
 		self.wild_tiles = []
 		self.is_passing = False
-		self.is_saving = False
 		self.full_bonus = False
-
-		self.output.write('\nEnter your move (e.g. h8 r money): \n')
-		self.output.flush()
-
-		player_input = self.input.readline()[:-1].lower().split()
+		print('\nEnter your move (e.g. h8 r money): \n')
+		player_input = input().lower().split()
 
 		if len(player_input) == 0:
 			self.display_message('Void input...')
@@ -59,7 +54,10 @@ class Player:
 				self.get_move(bag, board, dic)
 		else:
 			start, direction, word = player_input
-
+			if  direction == 'h':
+				direction = 'r' 
+			if direction == 'c' or direction == 'v':
+				direction = 'd' 
 			if not re.fullmatch('[a-o]1[0-5]|[a-o][1-9]', start):
 				self.display_message('Your starting square is not valid...')
 				self.get_move(bag, board, dic)
@@ -68,16 +66,15 @@ class Player:
 					self.get_move(bag, board, dic)
 			else:
 				self.word = Word(start, direction, word.upper(), board, dic)
-
 				if not self._valid_letters():
 					self.display_message('One or more letters are not on your rack...')
 					self.get_move(bag, board, dic)
 
 	def display_message(self, message):
-		self.output.write('\n==================================================================\n')
-		self.output.write(message.center(70))
-		self.output.write('\n==================================================================\n\n')
-		self.output.flush()
+		print('\n==================================================================\n')
+		print(message.center(70))
+		print('\n==================================================================\n\n')
+		# self.output.flush()
 
 	def return_wild_tile(self):
 		if self.wild_tiles:
@@ -94,10 +91,12 @@ class Player:
 			return bag.draw()
 
 	def _pass_letters(self, bag, board, dic):
-		self.output.write('\nEnter the letter(s) you want to pass: \n')
-		self.output.flush()
+		print('\nEnter the letter(s) you want to pass: \n')
+		# self.output.write('\nEnter the letter(s) you want to pass: \n')
+		# self.output.flush()
 
-		player_input = self.input.readline()[:-1].upper()
+		# player_input = self.input.readline()[:-1].upper()
+		player_input = input().upper()
 		passed_letters = list(re.sub('[^A-Z@]', '', player_input))
 
 		if len(player_input) == 0:
@@ -116,8 +115,9 @@ class Player:
 
 	def _replace_wild_tile(self):
 		for i in range(self.word.word.count('@')):
-			self.output.write("\nWhat letter will you use the wild tile for?: \n")
-			self.output.flush()
+			# self.output.write("\nWhat letter will you use the wild tile for?: \n")
+			# self.output.flush()
+			print("\nWhat letter will you use the wild tile for?: \n")
 
 			self.wild_tiles.append(self.input.readline()[:-1].upper())
 
@@ -158,4 +158,5 @@ class Player:
 		if l in self.word.aob_list:
 			self.word.aob_list.remove(l)
 		elif l not in self.word.aob_list:
-			self.letters.remove(l)
+			if l in self.letters:
+				self.letters.remove(l)

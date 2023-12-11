@@ -43,7 +43,6 @@ class Word:
       else:
         self.extra_words.append(self._set_extra_word(square, extra_word))
 
-        # In challenge mode, no need to check if it is in the dictionary
         # Check the last word as others are already checked
         if self.dict.valid_word(self.extra_words[-1][0]):
           check_list.append(True)
@@ -124,7 +123,6 @@ class Word:
     else:
       squares = self._set_range_to_down()
 
-    # Check if the squares returned are in the range of 'a' to 'o' and 1 to 15
     for s in squares:
       if not re.fullmatch('[a-o]1[0-5]|[a-o][1-9]', s):
         return False
@@ -135,38 +133,22 @@ class Word:
     return squares
 
   def _set_range_to_right(self):
-    # Determine the letter part of the last square of the word.
-    # Because it is to the right, modify the letter part
     last = chr((ord(self.start[0]) + len(self.word)))
-
-    # Check if the number part is 1 digit or 2 digits
     if len(self.start) == 2:
-      # Make a list of letters by making use of ascii numbers
       letter_range = list(range(ord(self.start[0]), ord(last)))
-
-      # Map the number part of the spot with letters in the range
       return list(map(lambda x: chr(x) + self.start[1], letter_range))
     else:
       letter_range = list(range(ord(self.start[0]), ord(last)))
-
       return list(map(lambda x: chr(x) + self.start[1:], letter_range))
 
   def _set_range_to_down(self):
-    # Check if the number part is 1 digit or 2 digits
     if len(self.start) == 2:
-      # Determine the number part of the last square of the word.
-      # Because it is to the down, modify the number part.
-      # Numbers decrease as it goes down. This one is 1 digit.
       last = int(self.start[1]) - len(self.word)
-      # Make a list of numbers in reverse order
       number_range = list(range(int(self.start[1]), last, -1))
-
-      # Map the letter part of the spot with numbers in the range
       return list(map(lambda x: self.start[0] + str(x), number_range))
     else:
       last = int(self.start[1:]) - len(self.word)
       number_range = list(range(int(self.start[1:]), last, -1))
-
       return list(map(lambda x: self.start[0] + str(x), number_range))
 
   def _set_aob_list(self):
@@ -175,22 +157,18 @@ class Word:
       for i, spot in enumerate(self.range):
         if self.board.board[spot] == self.word[i]:
           aob_list.append(self.word[i])
-
+    # print(aob_list)
     return aob_list
 
   def _set_up_or_left_extra_word(self, square, extra_word):
     while self.board.occupied(square, self.direction, self.board.up_or_left):
       square = self.board.up_or_left(square, self.direction)
-      # If the occupied squares are towards right or up,
-      # the letters should be added to the beginning of the array
       extra_word[0].insert(0, self.board.board[square])
       extra_word[1].insert(0, square)
 
   def _set_down_or_right_extra_word(self, square, extra_word):
     while self.board.occupied(square, self.direction, self.board.down_or_right):
       square = self.board.down_or_right(square, self.direction)
-      # If the occupied squares are towards left or down,
-      # the letters should be added to the end of the array
       extra_word[0].append(self.board.board[square])
       extra_word[1].append(square)
 
@@ -229,7 +207,6 @@ class Word:
 
   def _calculate_word_points(self, word, w_range):
     word_points = 0
-
     for l, s in zip(word, w_range):
       if s in self.wild_tiles:
         continue

@@ -4,10 +4,11 @@ from lib.bag import Bag
 from lib.board import Board
 from lib.player import Player
 from lib.dic import Dict
-from lib.comp import AIOpponent
+from lib.comp import AI_Player
 
 class Game:
-	def __init__(self, config={}):
+	def __init__(self, options={}):
+		# print("INIT RAN")
 		self.board = Board()
 		self.bag = Bag()
 		self.dict = Dict('./dics/sowpods.txt')
@@ -19,17 +20,21 @@ class Game:
 		self.human = None
 		self.words_list = set()
 		self.players_list = []
-		self.players = int(config.get('players', 2))
-		# self.time_limit = config.get('time_limit', False)
+		self.players = 2
+		# self.time_limit = options.get('time_limit', False)
 		# self.end_time = time.time() + int(self.time_limit) * 60
-		self.comp_game = config.get('comp_game', False)
+		self.human_comp = options.get('human_comp', False)
+		self.comp_comp = options.get('comp_comp', False)
+		self.human_human = options.get('human_human', False)
+		self.chances=0
 
 	def initialize_game(self):
-		if self.comp_game:
-			self.human = Player()
-			self.players_list.extend([AIOpponent(), self.human])
-			self.players_list[0].name = 'COMP'
-			self.players_list[-1].name = input('\nWhat is your name?: ').upper()
+		# print("initialize_game RAN")
+
+		if self.human_comp:
+			self.players_list.extend([ Player(), AI_Player()])
+			self.players_list[0].name = input('\nWhat is your name?: ').upper()
+			self.players_list[1].name = 'COMP'
 
 			for p in self.players_list:
 				p.draw_letters(self.bag)
@@ -37,46 +42,90 @@ class Game:
 			random.shuffle(self.players_list)
 			self.current_player = self.players_list[0]
 			self.prev_player = self.current_player.name
+
+		elif self.comp_comp:
+			self.players_list.extend([AI_Player(), AI_Player()])
+			self.players_list[0].name = 'COMP1'
+			self.players_list[1].name = 'COMP2'
+
+			for p in self.players_list:
+				p.draw_letters(self.bag)
+
+			random.shuffle(self.players_list)
+			self.current_player = self.players_list[0]
+			self.prev_player = self.current_player.name
+
+		elif self.human_human:
+			self.human1 = Player()
+			self.human2 = Player()
+			self.players_list.extend([self.human1,self.human2])
+			self.players_list[0].name = input('\nWhat is your name?: ').upper()
+			self.players_list[1].name = input('\nWhat is your name?: ').upper()
+
+			for p in self.players_list:
+				p.draw_letters(self.bag)
+
+			random.shuffle(self.players_list)
+			self.current_player = self.players_list[0]
+			self.prev_player = self.current_player.name
+
 		else:
 			print("Init else")
 
 	def initialize_turn(self):
+		# print("initialize_turn RAN")
+		self.words = []
 		if self.word:
 			self.words.append(self.word.word)
 			self.words.extend(list(map(lambda x: x[0], self.word.extra_words)))
 			self.words_list = self.words_list.union(set(self.words))
 
+
 		self.prev_player = self.current_player		
 		
 		self.current_player = self.players_list[self.turns % self.players]
-		if self.current_player is self.human or not self.comp_game:
+		# if self.current_player is self.human or not self.human_comp:
+		if self.turns==0:
+			self.board.display(self.current_player.output)
+			self.intial_display()
+			self.display_turn_info(self.current_player)
+		else:	
+			if self.word:	
+				print("\nWords Played: {}".format(self.word.word))
+				print("Words Formed: {}\t| Points:\t{}\n".format(self.words,self.points))
+			print('\n==================================================================\n\n')
 			self.board.display(self.current_player.output)
 			self.display_turn_info(self.current_player)
-		elif self.comp_game:
-			self.board.display(self.human.output)
-			self.display_turn_info(self.human)
-			print('\nIt\'s Computer\'s turn... {}\n'.format(self.current_player))
-		
-
 		self.turns += 1
-		self.words = []
+
+	def intial_display(self):
+		# self.current_player = self.players_list[self.turns % self.players]
+		# print("Initial display RAN")
+		print('\n==================================================================\n')
+		print("Players INFO")
+		for p in self.players_list:
+			print("\nPlayer:{}\t|\tTotal Points:{}\t|\tLetters Left in Bag: {} \n".format(p.name, p.score,len(self.bag.bag)))
+			print("Letters On Rack:\t\u2551 {} \u2551\n".format(' - '.join(p.letters)))
+		# print('\n==================================================================\n\n')
 
 	def display_turn_info(self, p):
-		p.output.write(
-			"\n\033[1mPlayer:\033[0m {}\t\t\033[1m|\033[0m  \033[1mTotal Points:\033[0m {}\n".format(
-				p.name, p.score
-			)
-		)
-		p.output.write(
-			"Letters Left in Bag: {}  | Words: {} for {} pts by {}\n\n".format(
-				len(self.bag.bag), self.words, self.points, self.prev_player.name
-			)
-		)
+		# print("display_turn_info")
+		print('\n==================================================================\n\n')
+		print(f"{p.name}'s Turn")
+		print("\nPlayer:{}\t|\tTotal Points:{}\t|\tLetters Left in Bag: {} \n\n".format(p.name, p.score,len(self.bag.bag)))
+		print("Letters On Rack:\t\u2551 {} \u2551\n".format(' - '.join(p.letters)))
+		# p.output.write(
+		# 	"Letters Left in Bag: {}  | Words: {} for {} pts by {}\n\n".format(
+		# 		len(self.bag.bag), self.words, self.points, self.prev_player.name
+		# 	)
+		# )
 		# p.output.write("Time left: {} minutes\n".format(int((self.end_time - time.time()) / 60)))
-		p.output.write("\u2551 {} \u2551\n".format(' - '.join(p.letters)).center(70))
-		p.output.flush()
+		# print("\u2551 {} \u2551\n".format(' - '.join(p.letters)).center(70))
 
 	def play_turn(self):
+		# print("play_turn RAN")
+		# print("Chances",self.chances)
+		# self.chances+=1
 		self.current_player.get_move(self.bag, self.board, self.dict)
 
 		self.word = self.current_player.word
@@ -99,18 +148,20 @@ class Game:
 			self.current_player.update_rack(self.bag)
 
 			if self.current_player.full_bonus and len(self.bag.bag) > 0:
-				self.points += 60
+				self.points += 50
 
 			self.current_player.update_score(self.points)
 			self.passes = 0
 		else:
 				self.current_player.display_message(self.word.error_message)
-				if self.word.invalid_word:
-					self.handle_invalid_word()
-				else:
-					self.play_turn()
+				# if self.word.invalid_word:
+				# 	self.handle_invalid_word()
+				# else:
+				self.play_turn()
+		
 
 	def racks_not_empty(self):
+		# print("racks_not_empty RAN")
 		for p in self.players_list:
 			if len(p.letters) == 0:
 				return False
@@ -118,21 +169,22 @@ class Game:
 		return True
 
 	def move_acceptable(self):
-		if self.time_limit and self.time_over():
-			self.end_game()
-			return False
+		# if self.time_limit and self.time_over():
+		# 	self.end_game()
+		# 	return False
 
 		return True
 
 	def handle_invalid_word(self):
+		# print("handle_invalid_word RAN")
 		self.current_player.return_wild_tile()
 
-		if not self.challenge_mode:
-			self.play_turn()
-		else:
-			self.passes += 1
-			self.points = 0
-			self.word.reset()
+		# if not self.challenge_mode:
+		# 	self.play_turn()
+		# else:
+		self.passes += 1
+		self.points = 0
+		self.word.reset()
 
 	# def set_time_limit(self):
 	# 	try:
@@ -147,6 +199,7 @@ class Game:
 	# 	return time.time() >= self.end_time
 
 	def decide_winner(self):
+		# print("decide_winner RAN")
 		bonus_getter = None
 		bonus = 0
 
@@ -175,42 +228,29 @@ class Game:
 
 		return winner
 
-	def display_last_turn_info(self, output):
-		self.words.append(self.word.word)
-		self.words.extend(list(map(lambda x: x[0], self.word.extra_words)))
-		self.words_list = self.words_list.union(set(self.words))
-		self.board.display(output)
-
-		output.write('\n\n')
-		output.write("\033[1mWords:\033[0m {} for {} pts by {}\n\n".format(self.words, self.points, self.current_player.name).center(75))
-		output.flush()
 
 	def end_game(self):
+		# print("end_game RAN")
 		self.remove_points()
 
 		winner = self.decide_winner()
 
-		for p in ((self.network_game and self.players_list) or [self.current_player]):
-			if self.time_limit and self.time_over():
-				# p.output.write('\n==================================================================\n\n')
-				# p.output.write('TIME IS UP!\n'.center(70))
-				pass
-			else:
-				self.display_last_turn_info(p.output)
+		for p in [self.current_player]:
+			# if self.time_limit and self.time_over():
+			# 	# p.output.write('\n==================================================================\n\n')
+			# 	# p.output.write('TIME IS UP!\n'.center(70))
+			# 	pass
+			# else:
+			print('\n==================================================================\n\n')
+			print('GAME IS OVER!\n'.center(70))
 
-				p.output.write('\n==================================================================\n\n')
-				p.output.write('GAME IS OVER!\n'.center(70))
-
-			p.output.write('\n')
+			print('\n')
 
 			for pl in self.players_list:
-				p.output.write((str(pl) + '\n').center(70))
-
-			p.output.write('\n')
-
-			p.output.write('The winner is \033[1m{}\033[0m with \033[1m{}\033[0m points!\n'.format(winner.name, winner.score).center(85))
-			p.output.write('\n==================================================================\n')
-
+				print((str(pl) + '\n').center(70))
+			print('\n')
+			print('The winner is \033[1m{}\033[0m with \033[1m{}\033[0m points!\n'.format(winner.name, winner.score).center(85))
+			print('\n==================================================================\n')
 		sys.exit()
 
 	def remove_points(self):
@@ -224,14 +264,15 @@ class Game:
 		try:
 			self.initialize_game()
 
-			while self.racks_not_empty() and self.passes != 3 * self.players:
+			while (self.racks_not_empty() and self.passes != 3 * self.players) :
 				try:
 					self.initialize_turn()
-					self.play_turn()
+					self.play_turn()					
 				except KeyboardInterrupt:
-					answer = input('\nAre you sure about cancelling the game (y/n) ?: ').upper().strip()
+					answer = input('\nDo you want to end the game (y/n) ?: ').upper().strip()
 
 					if answer.startswith('Y'):
+						self.end_game()
 						sys.exit()
 					else:
 						self.turns -= 1
