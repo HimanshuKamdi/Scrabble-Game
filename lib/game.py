@@ -4,7 +4,7 @@ from lib.bag import Bag
 from lib.board import Board
 from lib.player import Player
 from lib.dic import Dict
-from lib.comp import AI_Player
+from lib.ai import AI_Player
 
 class Game:
 	def __init__(self, options={}):
@@ -26,6 +26,8 @@ class Game:
 		self.human_comp = options.get('human_comp', False)
 		self.comp_comp = options.get('comp_comp', False)
 		self.human_human = options.get('human_human', False)
+		self.level = options.get('level','medium')
+		self.comp_dict = Dict(f'./dics/easy.txt')
 		self.chances=0
 
 	def initialize_game(self):
@@ -41,7 +43,7 @@ class Game:
 
 			random.shuffle(self.players_list)
 			self.current_player = self.players_list[0]
-			self.prev_player = self.current_player.name
+			self.prev_player = self.players_list[-1]
 
 		elif self.comp_comp:
 			self.players_list.extend([AI_Player(), AI_Player()])
@@ -53,7 +55,7 @@ class Game:
 
 			random.shuffle(self.players_list)
 			self.current_player = self.players_list[0]
-			self.prev_player = self.current_player.name
+			self.prev_player = self.players_list[-1]
 
 		elif self.human_human:
 			self.human1 = Player()
@@ -67,7 +69,7 @@ class Game:
 
 			random.shuffle(self.players_list)
 			self.current_player = self.players_list[0]
-			self.prev_player = self.current_player.name
+			self.prev_player = self.players_list[-1]
 
 		else:
 			print("Init else")
@@ -90,9 +92,13 @@ class Game:
 			self.intial_display()
 			self.display_turn_info(self.current_player)
 		else:	
-			if self.word:	
+			if self.word:
 				print("\nWords Played: {}".format(self.word.word))
 				print("Words Formed: {}\t| Points:\t{}\n".format(self.words,self.points))
+			else:
+				if self.passes>0:
+					print("Turn Passed")
+					print("Passes",self.passes)
 			print('\n==================================================================\n\n')
 			self.board.display(self.current_player.output)
 			self.display_turn_info(self.current_player)
@@ -106,7 +112,12 @@ class Game:
 		for p in self.players_list:
 			print("\nPlayer:{}\t|\tTotal Points:{}\t|\tLetters Left in Bag: {} \n".format(p.name, p.score,len(self.bag.bag)))
 			print("Letters On Rack:\t\u2551 {} \u2551\n".format(' - '.join(p.letters)))
-		# print('\n==================================================================\n\n')
+		print('\n==================================================================\n')
+		print("Input Instructions\n")
+		print("1.Enter input in format \"intial_position\" \"direction\" \"word\"\n\tE.g h8 r start ")
+		print("2.Valid Directions:\n\t\"r/h\" For rowise or horizontal\n\t\"c/v\" For column or vertical")
+		print("3.Enter \"pass\" for passing the turn")
+
 
 	def display_turn_info(self, p):
 		# print("display_turn_info")
@@ -126,7 +137,14 @@ class Game:
 		# print("play_turn RAN")
 		# print("Chances",self.chances)
 		# self.chances+=1
-		self.current_player.get_move(self.bag, self.board, self.dict)
+		if self.human_comp and self.level == 'easy' and self.current_player.name == 'COMP':
+			self.current_player.get_move(self.bag, self.board, self.comp_dict)
+		elif self.human_comp and self.level == 'hard' and self.current_player.name == 'COMP':
+			self.current_player.get_move(self.bag, self.board, self.dict, self.prev_player.letters)
+		# elif self.comp_comp:
+		# 	self.current_player.get_move(self.bag, self.board, self.dict,self.prev_player.letters)
+		else:
+			self.current_player.get_move(self.bag, self.board, self.dict)
 
 		self.word = self.current_player.word
 
@@ -257,14 +275,17 @@ class Game:
 		for p in self.players_list:
 			while p.letters:
 				for l in p.letters:
-					p.update_score(-(self.prev_player.word.letter_points[l]))
 					p.letters.remove(l)
+					# p.update_score(-(self.prev_player.word.letter_points[l]))
+					try:
+						p.update_score(-(self.prev_player.word.letter_points[l]))
+					except:
+						pass
 
 	def enter_game_loop(self):
-		try:
+		# try:
 			self.initialize_game()
-
-			while (self.racks_not_empty() and self.passes != 3 * self.players) :
+			while (self.racks_not_empty() and self.passes != 2 * self.players) :
 				try:
 					self.initialize_turn()
 					self.play_turn()					
@@ -276,12 +297,12 @@ class Game:
 						sys.exit()
 					else:
 						self.turns -= 1
-
+			if self.passes == 2 * self.players:
+				print("Turn Passed")
+				print("Passes",self.passes)
 			self.end_game()
-		except (BrokenPipeError, ConnectionResetError):
-				for p in self.players_list:
-					try:
-						p.output.write('\nA player has quit the game. The game is cancelled.\n\n')
-						p.output.flush()
-					except:
-						continue
+			exit()
+		# except Exception as e:
+		# 	print(e)
+
+

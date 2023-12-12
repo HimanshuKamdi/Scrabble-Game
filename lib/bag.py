@@ -3,9 +3,9 @@ import random
 class Bag:
 	def __init__(self):
 		self.bag = []
-		self._fill_bag()
+		self.fill_bag()
 
-	def _fill_bag(self):
+	def fill_bag(self):
 		self.bag.extend(['Q','Z','J','X','K'])
 
 		for i in range(2):
@@ -32,11 +32,10 @@ class Bag:
 
 	def draw(self):
 		random.shuffle(self.bag)
-
 		try:
 			return self.bag.pop()
-		except IndexError:
-			return '$'
+		except :
+			return 
 
 	def put_back(self, letters):
 		self.bag.extend(letters)

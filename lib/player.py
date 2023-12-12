@@ -15,21 +15,20 @@ class Player:
 
 	def draw_letters(self, bag, amount=7):
 		for i in range(amount):
-			self.letters.append(self._pick_from(bag))
-
+			self.letters.append(self.pick_from(bag))
+		print("letters",self.letters)
 		self.letters = list(re.sub('[^A-Z@]', '', ''.join(self.letters)))
 
 	def update_rack(self, bag):
 		aob = len(self.word.aob_list)
-
+		# print("AOB List",self.word.aob_list)
+		# print("word",self.word.word)
 		for l in self.word.word:
-			self._remove_tile(l)
-
+			self.remove_tile(l)
 		if len(self.letters) == 0:
 			self.full_bonus = True
-
 		if len(bag.bag) > 0:
-			self.draw_letters(bag, len(self.word.word) - aob)
+			self.draw_letters(bag, min(len(self.word.word) - aob,len(bag.bag)))
 
 	def update_score(self, points):
 		self.score += points
@@ -38,7 +37,7 @@ class Player:
 		self.wild_tiles = []
 		self.is_passing = False
 		self.full_bonus = False
-		print('\nEnter your move (e.g. h8 r money): \n')
+		print('\nEnter your move :\t')
 		player_input = input().lower().split()
 
 		if len(player_input) == 0:
@@ -46,7 +45,7 @@ class Player:
 			self.get_move(bag, board, dic)
 		elif len(player_input) < 3 or len(player_input) > 3:
 			if player_input[0] == 'pass':
-				self._pass_letters(bag, board, dic)
+				self.pass_letters(bag, board, dic)
 				self.is_passing = True
 			
 			else:
@@ -74,29 +73,23 @@ class Player:
 		print('\n==================================================================\n')
 		print(message.center(70))
 		print('\n==================================================================\n\n')
-		# self.output.flush()
 
-	def return_wild_tile(self):
-		if self.wild_tiles:
-			for wt in self.wild_tiles:
-				self.letters[self.letters.index(wt)] = '@'
+	# def return_wild_tile(self):
+	# 	if self.wild_tiles:
+	# 		for wt in self.wild_tiles:
+	# 			self.letters[self.letters.index(wt)] = '@'
 
-			self.wild_tiles = []
+	# 		self.wild_tiles = []
 
 	def __str__(self):
 		return '{} has got {} points.'.format(self.name, self.score).center(70)
 
-	def _pick_from(self, bag):
+	def pick_from(self, bag):
 		if bag:
 			return bag.draw()
 
-	def _pass_letters(self, bag, board, dic):
-		print('\nEnter the letter(s) you want to pass: \n')
-		# self.output.write('\nEnter the letter(s) you want to pass: \n')
-		# self.output.flush()
-
-		# player_input = self.input.readline()[:-1].upper()
-		player_input = input().upper()
+	def pass_letters(self, bag, board, dic):
+		player_input = input('\nEnter the letter(s) you want to pass:').upper()
 		passed_letters = list(re.sub('[^A-Z@]', '', player_input))
 
 		if len(player_input) == 0:
@@ -113,28 +106,26 @@ class Player:
 				self.display_message("One or more letters are not on your rack...")
 				self.get_move(bag, board, dic)
 
-	def _replace_wild_tile(self):
-		for i in range(self.word.word.count('@')):
-			# self.output.write("\nWhat letter will you use the wild tile for?: \n")
-			# self.output.flush()
-			print("\nWhat letter will you use the wild tile for?: \n")
+	# def _replace_wild_tile(self):
+	# 	for i in range(self.word.word.count('@')):
+	# 		print("\nWhat letter will you use the wild tile for?: \n")
 
-			self.wild_tiles.append(self.input.readline()[:-1].upper())
+	# 		self.wild_tiles.append(self.input.readline()[:-1].upper())
 
-		for wt in self.wild_tiles:
-			self.word.wild_tiles.append(self.word.range[self.word.word.index('@')])
-			self.word.word = re.sub('@', wt, self.word.word)
+	# 	for wt in self.wild_tiles:
+	# 		self.word.wild_tiles.append(self.word.range[self.word.word.index('@')])
+	# 		self.word.word = re.sub('@', wt, self.word.word)
 
 	def _valid_letters(self, word=None):
-		if '@' in (word or self.word.word):
-			if '@' not in self.letters:
-				return False
+		# if '@' in (word or self.word.word):
+		# 	if '@' not in self.letters:
+		# 		return False
 
-			self._replace_wild_tile()
+		# 	self._replace_wild_tile()
 
-		if self.wild_tiles:
-			for wt in self.wild_tiles:
-				self.letters[self.letters.index('@')] = wt
+		# if self.wild_tiles:
+		# 	for wt in self.wild_tiles:
+		# 		self.letters[self.letters.index('@')] = wt
 
 		for l in (word or self.word.word):
 			try:
@@ -149,12 +140,10 @@ class Player:
 
 	def _letter_on_rack(self, word, l):
 		if l not in self.letters or (word or self.word.word).count(l) > self.letters.count(l):
-			self.return_wild_tile()
 			return False
-
 		return True
 
-	def _remove_tile(self, l):
+	def remove_tile(self, l):
 		if l in self.word.aob_list:
 			self.word.aob_list.remove(l)
 		elif l not in self.word.aob_list:

@@ -36,7 +36,7 @@ class Word:
         check_list.append(True)
       # If it is not already on the board and there are no occupied squares
       # It is a valid one because it is standing alone not in an extra word
-      elif self.board.square_not_occupied(square, self.direction):
+      elif not(self.board.square_occupied(square, self.direction)):
         check_list.append(True)
       # If the letter is not already on the board and there are spots occupied
       # around it, it means it is suitable to make an extra word
@@ -98,6 +98,11 @@ class Word:
     if self.valid:
       return True
     else:
+      if all(i in self.aob_list for i in self.word):
+        self.error_message = 'Move was illegal...'
+        self.invalid_word = True
+        return False
+      
       if not self.valid_move():
         self.error_message = 'Move was illegal...'
         return False
@@ -119,9 +124,9 @@ class Word:
   # Return range if valid or False
   def _set_range(self):
     if self.direction == "r":
-      squares = self._set_range_to_right()
+      squares = self.set_range_to_right()
     else:
-      squares = self._set_range_to_down()
+      squares = self.set_range_to_down()
 
     for s in squares:
       if not re.fullmatch('[a-o]1[0-5]|[a-o][1-9]', s):
@@ -132,24 +137,29 @@ class Word:
 
     return squares
 
-  def _set_range_to_right(self):
+  def set_range_to_right(self):
     last = chr((ord(self.start[0]) + len(self.word)))
-    if len(self.start) == 2:
-      letter_range = list(range(ord(self.start[0]), ord(last)))
-      return list(map(lambda x: chr(x) + self.start[1], letter_range))
-    else:
-      letter_range = list(range(ord(self.start[0]), ord(last)))
-      return list(map(lambda x: chr(x) + self.start[1:], letter_range))
+    # if len(self.start) == 2:
+    #   letter_range = list(range(ord(self.start[0]), ord(last)))
+    #   return list(map(lambda x: chr(x) + self.start[1], letter_range))
+    # else:
+    #   letter_range = list(range(ord(self.start[0]), ord(last)))
+    #   return list(map(lambda x: chr(x) + self.start[1:], letter_range))
+    letter_range = list(range(ord(self.start[0]), ord(last)))
+    return list(map(lambda x: chr(x) + self.start[1:], letter_range))
 
-  def _set_range_to_down(self):
-    if len(self.start) == 2:
-      last = int(self.start[1]) - len(self.word)
-      number_range = list(range(int(self.start[1]), last, -1))
-      return list(map(lambda x: self.start[0] + str(x), number_range))
-    else:
-      last = int(self.start[1:]) - len(self.word)
-      number_range = list(range(int(self.start[1:]), last, -1))
-      return list(map(lambda x: self.start[0] + str(x), number_range))
+  def set_range_to_down(self):
+    # if len(self.start) == 2:
+    #   last = int(self.start[1]) - len(self.word)
+    #   number_range = list(range(int(self.start[1]), last, -1))
+    #   return list(map(lambda x: self.start[0] + str(x), number_range))
+    # else:
+    #   last = int(self.start[1:]) - len(self.word)
+    #   number_range = list(range(int(self.start[1:]), last, -1))
+    #   return list(map(lambda x: self.start[0] + str(x), number_range))
+    last = int(self.start[1:]) - len(self.word)
+    number_range = list(range(int(self.start[1:]), last, -1))
+    return list(map(lambda x: self.start[0] + str(x), number_range))
 
   def _set_aob_list(self):
     aob_list = []
@@ -157,7 +167,6 @@ class Word:
       for i, spot in enumerate(self.range):
         if self.board.board[spot] == self.word[i]:
           aob_list.append(self.word[i])
-    # print(aob_list)
     return aob_list
 
   def _set_up_or_left_extra_word(self, square, extra_word):
@@ -208,19 +217,19 @@ class Word:
   def _calculate_word_points(self, word, w_range):
     word_points = 0
     for l, s in zip(word, w_range):
-      if s in self.wild_tiles:
-        continue
-      elif s in self.board.wild_tiles_on_board:
-        continue
+      # if s in self.wild_tiles:
+      #   continue
+      # elif s in self.board.wild_tiles_on_board:
+      #   continue
+      # else:
+      if self.letter_bonus:
+        word_points += self.letter_bonus.get(s, 1) * self.letter_points[l]
       else:
-        if self.letter_bonus:
-          word_points += self.letter_bonus.get(s, 1) * self.letter_points[l]
-        else:
-          word_points += self.letter_points[l]
+        word_points += self.letter_points[l]
 
     if self.word_bonus:
       for s in w_range:
-        if not self.aob_list:
+        if not self.aob_list: 
           word_points *= self.word_bonus.get(s, 1)
 
     return word_points
