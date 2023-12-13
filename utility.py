@@ -1,4 +1,45 @@
-import re
+import random, re
+from pygtrie import StringTrie
+
+class Bag:
+	def __init__(self):
+		self.bag = []
+		self.fill_bag()
+
+	def fill_bag(self):
+		self.bag.extend(['Q','Z','J','X','K'])
+
+		for i in range(2):
+			self.bag.extend(['F','H','V','W','Y','B','C','M','P'])
+
+		for i in range(3):
+			self.bag.extend(['G'])
+
+		for i in range(4):
+			self.bag.extend(['D','U','S','L'])
+
+		for i in range(6):
+			self.bag.extend(['T','R','N'])
+
+		for i in range(8):
+			self.bag.extend(['O'])
+
+		for i in range(9):
+			self.bag.extend(['I','A'])
+
+		for i in range(12):
+			self.bag.extend(['E'])
+
+	def draw(self):
+		random.shuffle(self.bag)
+		try:
+			return self.bag.pop()
+		except :
+			return 
+
+	def put_back(self, letters):
+		self.bag.extend(letters)
+		
 
 class Word:
   def __init__(self, start, direction, word, board, dic):
@@ -32,7 +73,7 @@ class Word:
         check_list.append(True)
 
       else:
-        self.extra_words.append(self._set_extra_word(square, extra_word))
+        self.extra_words.append(self.set_extra_word(square, extra_word))
 
         if self.dict.valid_word(self.extra_words[-1][0]):
           check_list.append(True)
@@ -138,21 +179,21 @@ class Word:
           self.valid = False
     return aob_list
 
-  def _set_up_or_left_extra_word(self, square, extra_word):
+  def set_up_or_left_extra_word(self, square, extra_word):
     while self.board.occupied(square, self.direction, self.board.up_or_left):
       square = self.board.up_or_left(square, self.direction)
       extra_word[0].insert(0, self.board.board[square])
       extra_word[1].insert(0, square)
 
-  def _set_down_or_right_extra_word(self, square, extra_word):
+  def set_down_or_right_extra_word(self, square, extra_word):
     while self.board.occupied(square, self.direction, self.board.down_or_right):
       square = self.board.down_or_right(square, self.direction)
       extra_word[0].append(self.board.board[square])
       extra_word[1].append(square)
 
-  def _set_extra_word(self, square, extra_word):
-    self._set_up_or_left_extra_word(square, extra_word)
-    self._set_down_or_right_extra_word(square, extra_word)
+  def set_extra_word(self, square, extra_word):
+    self.set_up_or_left_extra_word(square, extra_word)
+    self.set_down_or_right_extra_word(square, extra_word)
     extra_word[0] = ''.join(extra_word[0])
 
     return extra_word
@@ -196,3 +237,21 @@ class Word:
           word_points *= self.word_bonus.get(s, 1)
 
     return word_points
+		
+
+class Dict:
+    def __init__(self, dic):
+        self.trie = self.create_trie(dic)
+
+    def create_trie(self, dic):
+        trie = StringTrie()
+        with open(dic, 'r') as file:
+            for line in file:
+                word = line.strip().upper()
+                trie[word] = True
+        return trie
+
+    def valid_word(self, word):
+        return word in self.trie
+
+

@@ -1,6 +1,6 @@
 import itertools, random
-from lib.word import Word
-from lib.player import Player
+from utility import Word
+from player import Player
 class AI_Player(Player):
   def get_move(self, bag, board, dic, opp_rack=[]):
     self.full_bonus = False

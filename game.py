@@ -1,16 +1,15 @@
-import random, time, sys
+import random, sys
 
-from lib.bag import Bag
-from lib.board import Board
-from lib.player import Player
-from lib.dic import Dict
-from lib.ai import AI_Player
+from board import Board
+from player import Player
+from utility import Bag,Dict
+from ai import AI_Player
 
 class Game:
 	def __init__(self, options={}):
 		self.board = Board()
 		self.bag = Bag()
-		self.dict = Dict('./dics/words.txt')
+		self.dict = Dict('./words.txt')
 		self.turns = 0
 		self.passes = 0
 		self.points = 0
@@ -24,7 +23,7 @@ class Game:
 		self.comp_comp = options.get('comp_comp', False)
 		self.human_human = options.get('human_human', False)
 		self.level = options.get('level','medium')
-		self.comp_dict = Dict(f'./dics/easy.txt')
+		self.comp_dict = Dict(f'./easy.txt')
 		self.chances=0
 
 	def initialize_game(self):

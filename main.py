@@ -1,5 +1,5 @@
 import sys
-from lib.game import Game
+from game import Game
 
 class StartGame:
     def __init__(self):
