@@ -9,7 +9,6 @@ class Bag:
 		self.bag.extend(['Q','Z','J','X','K'])
 
 		for i in range(2):
-			# self.bag.extend(['F','H','V','W','Y','B','C','M','P','@'])
 			self.bag.extend(['F','H','V','W','Y','B','C','M','P'])
 
 		for i in range(3):

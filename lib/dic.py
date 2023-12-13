@@ -15,7 +15,7 @@ class Dict:
         trie = StringTrie()
         with open(dic, 'r') as file:
             for line in file:
-                word = line.strip()
+                word = line.strip().upper()
                 trie[word] = True
         return trie
 
