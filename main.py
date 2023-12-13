@@ -18,8 +18,6 @@ class StartGame:
 
         action = input('\nChoose an option: ')
 
-        # if action == '0':
-        #     self.print_info()
         if action == '1':
             self.human_against_comp()
         elif action == '2':
@@ -42,7 +40,6 @@ class StartGame:
         Game(self.options).enter_game_loop()
 
     def comp_against_comp(self):
-        # self.options.update(self.give_secondary_options(computer=True))
         self.options['comp_comp'] = True
         Game(self.options).enter_game_loop()
 
